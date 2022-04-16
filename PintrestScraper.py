@@ -50,7 +50,7 @@ pasw = args.password_id
 
 
 try:
-  fileList = os.listdir("/content/drive/MyDrive/Gardolap Dataset/Pinterest/woman jacket outfit ideas")
+  fileList = os.listdir(rootPath+"/Pinterest/"+search)
   startIndex= int(fileList[-1][0:-4])+1
 except:
   startIndex= 0
