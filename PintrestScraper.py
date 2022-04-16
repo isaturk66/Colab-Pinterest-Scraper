@@ -301,7 +301,7 @@ def main():
     time.sleep(15)
 
     print("Downloading pictures...")
-    t3 = threading.Thread(target=downloadpic, args=(image_objects))
+    t3 = threading.Thread(target=downloadpic, args=(image_objects,))
     t3.setDaemon(True)
     t3.start()
     
