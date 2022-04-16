@@ -224,10 +224,10 @@ def main():
 
 
     login(driver1, username, pasw)
-    login(driver2, username, pasw)
     # Make sure it's loaded before doing anything
     
     time.sleep(5)
+    login(driver2, username, pasw)
 
     loaded1 = False
     while loaded1 == False:
@@ -309,12 +309,8 @@ def main():
     t3.setDaemon(True)
     t3.start()
 
-    while True:
-      if(not t3.is_alive() and rem_image_objects):
-        t3.start()
-      if(not t2.is_alive() and not rem_image_objects):
-        break
-    
+    t3.join()
+
     print("Done")
 
 
