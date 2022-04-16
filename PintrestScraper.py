@@ -138,10 +138,13 @@ def download_pages(driver, valid_urls):
         driver.execute_script("window.scrollBy(0,300)")
     return
 
+class ImageObject(object):
+    pass
+
 
 # Downloads the image files from the img urls
-def get_pic(valid_urls, driver):
-    sourceFilePath =rootPath+"Pinterest/"+search+"/sources.txt"
+def get_pic(valid_urls, driver,img_objects):
+    sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
     try:
       if(not exists(sourceFilePath)):
         os.makedirs(rootPath+"Pinterest/"+search)
@@ -149,7 +152,6 @@ def get_pic(valid_urls, driver):
         tempFile.close()
     except:
       print("Path creation exception")
-    sourceFile = open(sourceFilePath, "a")  # append mode
 
     get_pic_counter = 0
     while (get_pic_counter < len(valid_urls)):
@@ -157,7 +159,6 @@ def get_pic(valid_urls, driver):
         # Now, we can just type in the URL and pinterest will not block us
         for urls in valid_urls:
             if(urls in doneURLs):
-              print("skipping")
               break
             driver.get(urls)
 
@@ -179,21 +180,34 @@ def get_pic(valid_urls, driver):
                   img_link = img_l
                   break
               if(img_link != False):
-                print("Downloading the Image: " + str(get_pic_counter))
-                print(img_link)
                 get_pic_counter += 1
-                t.download_image(img_link)
+                img_object = ImageObject()
+                img_object.img_url = img_link
+                img_object.source_url = urls
+                img_objects.append(img_object)
               else:
                 print("No image with originals or 564x in "+str(urls))
               doneURLs.append(urls)
-              sourceFile.write(urls+"\n")
-              sourceFile.flush()
 
             except Exception as e:
               print("Parse Exeption")
               print(e.args)
               print(driver.page_source)
             # ---------------------------------EDIT THE CODE ABOVE IF PINTEREST CHANGES-----------------------------#
+
+def downloadpic(img_objects):
+  sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
+  sourceFile = open(sourceFilePath, "a")  # append mode
+  download_img_counter = 0
+  while (download_img_counter < len(img_objects)):
+    for img_object in img_objects:
+        img_url = img_object.img_url
+        source_url = img_object.source_url
+        download_img_counter+=1
+        print(str(download_img_counter) + "  Downloading the image "+ str(img_url))
+        t.download_image(img_url)
+        sourceFile.write(source_url+"\n")
+        sourceFile.flush()
 
 
 def main():
@@ -240,6 +254,8 @@ def main():
     print("Starting threads...")
     keyword = search
     valid_urls = []
+    image_objects = []
+
     url = "https://pinterest.com/search/pins/?q="
 
     keyList = keyword.split()
@@ -271,20 +287,27 @@ def main():
 
     time.sleep(3)
 
-        
+    print("Fetching search results...")
     t1 = threading.Thread(target=download_pages, args=(driver1, valid_urls,))
     t1.setDaemon(True)
     t1.start()
     
-    time.sleep(15)
-
-    t2 = threading.Thread(target=get_pic, args=(valid_urls, driver2,))
+    time.sleep(10)
+    print("Gathering img urls...")
+    t2 = threading.Thread(target=get_pic, args=(valid_urls, driver2,image_objects))
     t2.setDaemon(True)
     t2.start()
-    #
-    t2.join()
-    # t2.join()
-    print("done")
+
+    time.sleep(15)
+
+    print("Downloading pictures...")
+    t3 = threading.Thread(target=downloadpic, args=(image_objects))
+    t3.setDaemon(True)
+    t3.start()
+    
+    t3.join()
+    
+    print("Done")
 
 
 if __name__ == "__main__":
@@ -292,5 +315,3 @@ if __name__ == "__main__":
 
 else:
     main()
-# while loaded:
-#     driver.execute_script("window.scrollBy(0,250)")
