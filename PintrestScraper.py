@@ -47,7 +47,7 @@ rootPath = args.path_id
 search = args.search_id
 username=args.username_id
 pasw = args.password_id
-download_img_counter = 0
+
 
 try:
   fileList = os.listdir("/content/drive/MyDrive/Gardolap Dataset/Pinterest/woman jacket outfit ideas")
@@ -90,7 +90,7 @@ def search_for_product(driver, keyword):
 def download_pages(driver, valid_urls):
     list_counter = 0
     try:
-      with open(rootPath+"Pinterest/"+search+"/sources.txt",'r') as f: sourceList = f.read().splitlines()
+      with open(rootPath+"Pinterest/"+"/sources.txt",'r') as f: sourceList = f.read().splitlines()
     except:
       sourceList = []
     
@@ -138,12 +138,9 @@ def download_pages(driver, valid_urls):
         driver.execute_script("window.scrollBy(0,300)")
     return
 
-class ImageObject(object):
-    pass
-
 
 # Downloads the image files from the img urls
-def get_pic(valid_urls, driver,img_objects,rem_image_objects):
+def get_pic(valid_urls, driver):
     sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
     try:
       if(not exists(sourceFilePath)):
@@ -152,6 +149,7 @@ def get_pic(valid_urls, driver,img_objects,rem_image_objects):
         tempFile.close()
     except:
       print("Path creation exception")
+    sourceFile = open(sourceFilePath, "a")  # append mode
 
     get_pic_counter = 0
     while (get_pic_counter < len(valid_urls)):
@@ -180,15 +178,14 @@ def get_pic(valid_urls, driver,img_objects,rem_image_objects):
                   img_link = img_l
                   break
               if(img_link != False):
+                print(str(get_pic_counter) + "  Downloading the image "+ str(img_link))
                 get_pic_counter += 1
-                img_object = ImageObject()
-                img_object.img_url = img_link
-                img_object.source_url = urls
-                img_objects.append(img_object)
-                rem_image_objects.append(img_object)
+                t.download_image(img_link)
               else:
                 print("No image with originals or 564x in "+str(urls))
               doneURLs.append(urls)
+              sourceFile.write(urls+"\n")
+              sourceFile.flush()
 
             except Exception as e:
               print("Parse Exeption")
@@ -196,23 +193,6 @@ def get_pic(valid_urls, driver,img_objects,rem_image_objects):
               print(driver.page_source)
             # ---------------------------------EDIT THE CODE ABOVE IF PINTEREST CHANGES-----------------------------#
 
-def downloadpic(img_objects,rem_image_objects):
-  global download_img_counter
-  sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
-  sourceFile = open(sourceFilePath, "a")  # append mode
-  while (download_img_counter < len(img_objects)):
-    temp_image_objects = rem_image_objects
-    for img_object in rem_image_objects:
-        img_url = img_object.img_url
-        source_url = img_object.source_url
-        download_img_counter+=1
-        print(str(download_img_counter) + "  Downloading the image "+ str(img_url))
-        t.download_image(img_url)
-        temp_image_objects.remove(img_object)
-        sourceFile.write(source_url+"\n")
-        sourceFile.flush()
-    rem_image_objects = temp_image_objects
-    time.sleep(5)
 
 def main():
     global t
@@ -223,11 +203,13 @@ def main():
     # Log in to Pinterest.com
 
 
+
+
     login(driver1, username, pasw)
+    login(driver2, username, pasw)
     # Make sure it's loaded before doing anything
     
     time.sleep(5)
-    login(driver2, username, pasw)
 
     loaded1 = False
     while loaded1 == False:
@@ -256,10 +238,6 @@ def main():
     print("Starting threads...")
     keyword = search
     valid_urls = []
-    image_objects = []
-    rem_image_objects = []
-
-
     url = "https://pinterest.com/search/pins/?q="
 
     keyList = keyword.split()
@@ -296,20 +274,14 @@ def main():
     t1.setDaemon(True)
     t1.start()
     
-    time.sleep(10)
-    print("Gathering img urls...")
-    t2 = threading.Thread(target=get_pic, args=(valid_urls, driver2,image_objects,rem_image_objects,))
+    time.sleep(15)
+    print("Downloading pictures...")
+
+    t2 = threading.Thread(target=get_pic, args=(valid_urls, driver2,))
     t2.setDaemon(True)
     t2.start()
-
-    time.sleep(15)
-
-    print("Downloading pictures...")
-    t3 = threading.Thread(target=downloadpic, args=(image_objects,rem_image_objects,))
-    t3.setDaemon(True)
-    t3.start()
-
-    t3.join()
+    #
+    t2.join()
 
     print("Done")
 
