@@ -129,7 +129,6 @@ def download_pages(driver, valid_urls):
                 # Checks and makes sure that the pin isn't there already and that random urls are not invited
                 if len(url) < 60 and url not in valid_urls and "A" not in url and url not in sourceList:
                     # ---------------------------------EDIT THE CODE ABOVE-------------------------------#
-                    print(list_counter)
                     valid_urls.append(url)
                    # print("found the detailed page of: " + str(list_counter))
                     list_counter += 1
@@ -153,7 +152,7 @@ def get_pic(valid_urls, driver):
     sourceFile = open(sourceFilePath, "a")  # append mode
 
     get_pic_counter = 0
-    while (get_pic_counter < len(valid_urls-1)):
+    while (get_pic_counter < len(valid_urls)-1):
         print("Restarting Iteration")
         # Now, we can just type in the URL and pinterest will not block us
         for urls in valid_urls:
