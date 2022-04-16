@@ -197,6 +197,7 @@ def get_pic(valid_urls, driver,img_objects,rem_image_objects):
             # ---------------------------------EDIT THE CODE ABOVE IF PINTEREST CHANGES-----------------------------#
 
 def downloadpic(img_objects,rem_image_objects):
+  global download_img_counter
   sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
   sourceFile = open(sourceFilePath, "a")  # append mode
   while (download_img_counter < len(img_objects)):
@@ -211,6 +212,7 @@ def downloadpic(img_objects,rem_image_objects):
         sourceFile.write(source_url+"\n")
         sourceFile.flush()
     rem_image_objects = temp_image_objects
+    time.sleep(5)
 
 def main():
     global t
