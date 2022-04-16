@@ -47,7 +47,7 @@ rootPath = args.path_id
 search = args.search_id
 username=args.username_id
 pasw = args.password_id
-
+download_img_counter = 0
 
 try:
   fileList = os.listdir("/content/drive/MyDrive/Gardolap Dataset/Pinterest/woman jacket outfit ideas")
@@ -143,7 +143,7 @@ class ImageObject(object):
 
 
 # Downloads the image files from the img urls
-def get_pic(valid_urls, driver,img_objects):
+def get_pic(valid_urls, driver,img_objects,rem_image_objects):
     sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
     try:
       if(not exists(sourceFilePath)):
@@ -185,6 +185,7 @@ def get_pic(valid_urls, driver,img_objects):
                 img_object.img_url = img_link
                 img_object.source_url = urls
                 img_objects.append(img_object)
+                rem_image_objects.append(img_object)
               else:
                 print("No image with originals or 564x in "+str(urls))
               doneURLs.append(urls)
@@ -195,20 +196,21 @@ def get_pic(valid_urls, driver,img_objects):
               print(driver.page_source)
             # ---------------------------------EDIT THE CODE ABOVE IF PINTEREST CHANGES-----------------------------#
 
-def downloadpic(img_objects):
+def downloadpic(img_objects,rem_image_objects):
   sourceFilePath =rootPath+"Pinterest/"+"/sources.txt"
   sourceFile = open(sourceFilePath, "a")  # append mode
-  download_img_counter = 0
   while (download_img_counter < len(img_objects)):
-    for img_object in img_objects:
+    temp_image_objects = rem_image_objects
+    for img_object in rem_image_objects:
         img_url = img_object.img_url
         source_url = img_object.source_url
         download_img_counter+=1
         print(str(download_img_counter) + "  Downloading the image "+ str(img_url))
         t.download_image(img_url)
+        temp_image_objects.remove(img_object)
         sourceFile.write(source_url+"\n")
         sourceFile.flush()
-
+    rem_image_objects = temp_image_objects
 
 def main():
     global t
@@ -217,8 +219,6 @@ def main():
     driver1.get("https://www.pinterest.com/login/?referrer=home_page")
     driver2.get("https://www.pinterest.com/login/?referrer=home_page")
     # Log in to Pinterest.com
-
-
 
 
     login(driver1, username, pasw)
@@ -255,6 +255,8 @@ def main():
     keyword = search
     valid_urls = []
     image_objects = []
+    rem_image_objects = []
+
 
     url = "https://pinterest.com/search/pins/?q="
 
@@ -294,18 +296,22 @@ def main():
     
     time.sleep(10)
     print("Gathering img urls...")
-    t2 = threading.Thread(target=get_pic, args=(valid_urls, driver2,image_objects))
+    t2 = threading.Thread(target=get_pic, args=(valid_urls, driver2,image_objects,rem_image_objects,))
     t2.setDaemon(True)
     t2.start()
 
     time.sleep(15)
 
     print("Downloading pictures...")
-    t3 = threading.Thread(target=downloadpic, args=(image_objects,))
+    t3 = threading.Thread(target=downloadpic, args=(image_objects,rem_image_objects,))
     t3.setDaemon(True)
     t3.start()
-    
-    t3.join()
+
+    while True:
+      if(not t3.is_alive() and rem_image_objects):
+        t3.start()
+      if(not t2.is_alive() and not rem_image_objects):
+        break
     
     print("Done")
 
